@@ -27,11 +27,11 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 			if(*curfmt == '%'){
 				break;
 			}
+			print_char(out, data, *curfmt, 1, 0);
 			curfmt++;
 		}
 		/* flush the string found so far */
 		/* Exercise 1.4: Your code here. (2/8) */
-		print_str(out, data, fmt, curfmt-fmt, 0);
 		fmt = curfmt;
 		/* check "are we hitting the end?" */
 		/* Exercise 1.4: Your code here. (3/8) */
