@@ -19,7 +19,7 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 	for (;;) {
 		/* scan for the next '%' */
 		/* Exercise 1.4: Your code here. (1/8) */
-		char *curfmt = fmt;
+		char *curfmt = (char *) fmt;
 		while (1){
 			if(*curfmt == '\0'){
 				break;
