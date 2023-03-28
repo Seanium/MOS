@@ -35,5 +35,19 @@ void schedule(int yield) {
 	 *   'TAILQ_FIRST', 'TAILQ_REMOVE', 'TAILQ_INSERT_TAIL'
 	 */
 	/* Exercise 3.12: Your code here. */
-
+	if(yield!=0 || count==0 || e==NULL || e->env_status!=ENV_RUNNABLE){
+		if(e != NULL){
+			if(e->env_status==ENV_RUNNABLE){
+				TAILQ_REMOVE(&env_sched_list, e, env_sched_link);
+				TAILQ_INSERT_TAIL(&env_sched_list, e, env_sched_link);
+			}else{
+				TAILQ_REMOVE(&env_sched_list, e, env_sched_link);
+			}
+		}
+		panic_on(TAILQ_EMPTY(&env_sched_list));
+		e = TAILQ_FIRST(&env_sched_list);
+		count = e->env_pri;
+	}
+	count--;	//必须写在env_run前面，因为env_run会跳转出去
+	env_run(e);
 }
