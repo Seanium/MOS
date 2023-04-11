@@ -137,7 +137,7 @@ int envid2env(u_int envid, struct Env **penv, int checkperm) {
 	 */
 	/* Exercise 4.3: Your code here. (2/2) */
 	if(checkperm != 0){
-		if(e != curenv && e->env_id != curenv->env_parent_id){
+		if(e != curenv && e->env_parent_id != curenv->env_id){
 			*penv = NULL;
 			return -E_BAD_ENV;
 		}
