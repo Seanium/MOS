@@ -13,7 +13,7 @@ int block_is_free(u_int);
 // Hint: Use 'DISKMAP' and 'BY2BLK' to calculate the address.
 void *diskaddr(u_int blockno) {
 	/* Exercise 5.6: Your code here. */
-	return DISKMAP + blockno * BY2BLK;
+	return (void *) (DISKMAP + blockno * BY2BLK);
 }
 
 // Overview:
@@ -491,7 +491,7 @@ int file_dirty(struct File *f, u_int offset) {
 //  Return 0 on success, and set the pointer to the target file in `*file`.
 //  Return the underlying error if an error occurs.
 int dir_lookup(struct File *dir, char *name, struct File **file) {
-	int r;
+	//int r;
 	// Step 1: Calculate the number of blocks in 'dir' via its size.
 	u_int nblock;
 	/* Exercise 5.8: Your code here. (1/3) */
