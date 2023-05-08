@@ -88,13 +88,12 @@ static void duppage(u_int envid, u_int vpn) {
 	if ((perm & PTE_D) && !(perm & PTE_LIBRARY)) {
 		perm |= PTE_COW;
 		perm &= ~PTE_D;
-		r = 1;
-		//syscall_mem_map(0, (void *)addr, 0, (void *)addr, perm);
-	}
-	syscall_mem_map(0, (void *)addr, envid, (void *)addr, perm);
-	if (r) {
+		syscall_mem_map(0, (void *)addr, envid, (void *)addr, perm);
 		syscall_mem_map(0, (void *)addr, 0, (void *)addr, perm);
+	} else {
+		syscall_mem_map(0, (void *)addr, envid, (void *)addr, perm);
 	}
+
 }
 
 /* Overview:
