@@ -70,7 +70,6 @@ static void __attribute__((noreturn)) cow_entry(struct Trapframe *tf) {
  *     'sys_mem_map' in kernel.
  */
 static void duppage(u_int envid, u_int vpn) {
-	int r;
 	u_int addr;
 	u_int perm;
 
@@ -83,7 +82,6 @@ static void duppage(u_int envid, u_int vpn) {
 	/* Hint: The page should be first mapped to the child before remapped in the parent. (Why?)
 	 */
 	/* Exercise 4.10: Your code here. (2/2) */
-	r = 0;
 	addr = vpn << PGSHIFT;
 	if ((perm & PTE_D) && !(perm & PTE_LIBRARY)) {
 		perm |= PTE_COW;
