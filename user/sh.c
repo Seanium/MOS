@@ -120,7 +120,7 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			// Open 't' for writing, dup it onto fd 1, and then close the original fd.
 			/* Exercise 6.5: Your code here. (2/3) */
-			if ((fd = open(t, O_WRONLY)) < 0) {
+			if ((fd = open(t, O_WRONLY | O_CREAT)) < 0) {
 				user_panic("> open failed");
 			}
 			dup(fd, 1);

@@ -98,8 +98,14 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 
 	// Open the file.
 	if ((r = file_open(rq->req_path, &f)) < 0) {
-		ipc_send(envid, r, 0, 0);
-		return;
+		if ((rq->req_omode & O_CREAT) != 0) {
+			if ((r = file_create(rq->req_path, &f)) < 0) {
+				user_panic("create file failed");
+			}
+		} else {
+			ipc_send(envid, r, 0, 0);
+			return;
+		}
 	}
 
 	// Save the file pointer.
