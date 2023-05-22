@@ -33,6 +33,21 @@ int _gettoken(char *s, char **p1, char **p2) {
 		return 0;
 	}
 
+	//challenge
+	if (*s == '\"') {
+		*p1 = ++s;
+		while (*s != 0 && *s != '\"') {
+			s++;
+		}
+		if (*s == 0) {
+			debugf("match failed\n");
+			return 0;
+		}
+		*s++ = 0;
+		*p2 = s;
+		return 'w';
+	}
+
 	if (strchr(SYMBOLS, *s)) {
 		int t = *s;
 		*p1 = s;
@@ -64,6 +79,8 @@ int gettoken(char *s, char **p1) {
 }
 
 #define MAXARGS 128
+
+int background = 0;
 
 int parsecmd(char **argv, int *rightpipe) {
 	int argc = 0;
@@ -144,6 +161,19 @@ int parsecmd(char **argv, int *rightpipe) {
 			//user_panic("| not implemented");
 
 			break;
+		case ';':;
+			int pid;
+			if ((pid = fork()) == 0) {
+				return argc;
+			} else {
+				wait(pid);
+				argc = 0;
+				//*rightpipe = 0;
+			}
+			break;
+		case '&':
+			background = 1;
+			break;
 		}
 	}
 
@@ -164,7 +194,9 @@ void runcmd(char *s) {
 	int child = spawn(argv[0], argv);
 	close_all();
 	if (child >= 0) {
-		wait(child);
+		if (!background) {
+			wait(child);
+		}
 	} else {
 		debugf("spawn %s: %d\n", argv[0], child);
 	}
