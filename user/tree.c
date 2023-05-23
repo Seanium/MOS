@@ -13,8 +13,8 @@ void get_tree(int depth, char *path) {
         user_panic("tree open dir failed");
     }
 
-    struct Fd* fd = (struct Fd*)num2fd(r);
-    struct Filefd* fileFd = (struct FileFd*) fd;
+    struct Fd *fd = (struct Fd *) num2fd(r);
+    struct Filefd *fileFd = (struct FileFd *) fd;
 
     fprintf(1, "\033[34m%s\033[0m\n", fileFd->f_file.f_name);
     
@@ -52,4 +52,5 @@ int main(int argc, char **argv) {
     } else {
         user_panic("tree format wrong");
     }
+    return 0;
 }
