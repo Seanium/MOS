@@ -102,6 +102,11 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 			if ((r = file_create(rq->req_path, &f)) < 0) {
 				user_panic("create file failed");
 			}
+		} else if ((rq->req_omode & O_MKDIR) != 0) {
+			if ((r = file_create(rq->req_path, &f)) < 0) {
+				user_panic("create dir failed");
+			}
+			f->f_type = FTYPE_DIR;
 		} else {
 			ipc_send(envid, r, 0, 0);
 			return;
