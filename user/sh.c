@@ -33,7 +33,7 @@ int _gettoken(char *s, char **p1, char **p2) {
 		return 0;
 	}
 
-	//challenge
+	//lab6-challenge
 	if (*s == '\"') {
 		*p1 = ++s;
 		while (*s != 0 && *s != '\"') {
@@ -208,6 +208,7 @@ void runcmd(char *s) {
 
 void readline(char *buf, u_int n) {
 	int r;
+	int left = 0; //challenge
 	for (int i = 0; i < n; i++) {
 		if ((r = read(0, buf + i, 1)) != 1) {
 			if (r < 0) {
@@ -217,7 +218,22 @@ void readline(char *buf, u_int n) {
 		}
 		if (buf[i] == '\b' || buf[i] == 0x7f) {
 			if (i > 0) {
-				i -= 2;
+				//challenge
+				i--;
+				buf[i + 1] = 0;
+				for (int j = i - left; j <= i - 1; j++) {
+					buf[j] = buf[j + 1];
+				}
+				buf[i] = 0;
+				fprintf(1, "\x1b[%dD", i - left + 1);
+				fprintf(1, "\x1b[K");
+				fprintf(1, buf);
+				if (left > 1) {
+					fprintf(1, "\x1b[%dD", left - 1);
+				} else if (left == 0) {
+					fprintf(1, "\x1b[C");
+				}
+				i--;
 			} else {
 				i = -1;
 			}
@@ -225,9 +241,62 @@ void readline(char *buf, u_int n) {
 				printf("\b");
 			}
 		}
-		if (buf[i] == '\r' || buf[i] == '\n') {
+		else if (buf[i] == '\r' || buf[i] == '\n') {
 			buf[i] = 0;
 			return;
+		}
+		//lab6-challenge
+		else if (buf[i] == 27) {
+			char c1, c2;
+			read(0, &c1, 1);
+			read(0, &c2, 1);
+			if(c1 == 91 && c2 == 65) {
+				fprintf(1, "\x1b[B");
+				//for (int j = 0; j < i; j++) {
+				//	fprintf(1, "\x1b[D");
+				//}
+				fprintf(1, "\x1b[%dD", i);
+				char s[] = "testpassed";
+				fprintf(1, "\x1b[K");
+				fprintf(1, s);
+				int len = strlen(s);
+				for (int i = 0; i < len; i++) {
+					buf[i] = s[i];
+				}
+				buf[len] = 0;
+				i = strlen(s) - 1;
+			} else if (c1 == 91 && c2 == 66) {
+				fprintf(1, "\x1b[0D");
+			} else if (c1 == 91 && c2 == 68) {
+				left++;
+				buf[i] = 0;
+				i--;
+				//printf("%d\n", strlen(buf));
+				//printf("%c\n", buf[strlen(buf) - 1]);
+			} else if (c1 == 91 && c2 == 67) {
+				left--;
+				buf[i] = 0;
+				i--;
+			}
+		}
+		else if (left > 0) {
+			//printf("%d %d\n", i, left);
+			/*
+			buf[i - left] = buf[i];
+			buf[i] = 0;
+			i--;
+			left--;
+			*/
+			char c = buf[i];
+			for (int j = i; j >= i - left + 1; j--) {
+				buf[j] = buf[j - 1];
+			}
+			buf[i - left] = c;
+			buf[i + 1] = 0;
+			fprintf(1, "\x1b[%dD", i - left + 1);
+			fprintf(1, "\x1b[K");
+			fprintf(1, buf);
+			fprintf(1, "\x1b[%dD", left);
 		}
 	}
 	debugf("line too long\n");
