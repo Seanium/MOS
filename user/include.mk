@@ -37,6 +37,7 @@ ifeq ($(call lab-ge,6), true)
 			touch.b \
 			mkdir.b \
 			tree.b \
+			history.b \
 			testpipe.b \
 			testpiperace.b \
 			testptelibrary.b \

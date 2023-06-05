@@ -46,6 +46,12 @@ int open(const char *path, int mode) {
 	ffd = (struct Filefd *) fd;
 	size = ffd->f_file.f_size;
 	fileid = ffd->f_fileid;
+
+	//lab6-challenge
+	if ((mode & O_APPEND) != 0) {
+		fd->fd_offset = size;
+	}
+
 	// Step 4: Alloc pages and map the file content using 'fsipc_map'.
 	for (int i = 0; i < size; i += BY2PG) {
 		/* Exercise 5.9: Your code here. (4/5) */

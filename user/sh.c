@@ -206,9 +206,78 @@ void runcmd(char *s) {
 	exit();
 }
 
+int resetGetcmd = 1;
+// type为0表示向上，为1表示向下
+int getcmd(char *buf, int type) {
+	static int fdnum;
+	static struct Fd *fd;
+	static char *c;
+	static char *begin;
+	static char *end;
+	char *p;
+	if (resetGetcmd == 1) {
+		if ((fdnum = open(".history", O_RDONLY)) < 0) {
+			fprintf(1, ".history open failed");
+			return 0;
+		}
+		fd = (struct Fd *) num2fd(fdnum);
+		begin = fd2data(fd);
+		end = begin + ((struct Filefd*)fd)->f_file.f_size;
+		c = end - 1;
+	}
+	if (type == 0) { //向上
+		//c回跳过上条指令末尾空白或换行符
+		while (*c == 0 || *c == '\n') {
+			c--;
+		}
+		//c回跳到上条指令开头前一个字符，或文件开头
+		while (*c != '\n' && c > begin) {
+			c--;
+		}
+		//设置p为上条指令第一个字符
+		if (*c == '\n') {
+			p = c + 1;
+		} else {
+			p = c;
+		}
+		int i = 0;
+		//复制上条指令内容到buf
+		while (*p != '\n' && *p != 0) {
+			buf[i] = *p;
+			i++;
+			p++;
+		}
+		buf[i] = 0;
+		return i;
+	} else { //向下
+		//c跳过上条指令末尾换行符
+		while (*c == '\n' && c < end) {
+			c++;
+		}
+		//c跳到本条指令末尾换行符
+		while (*c != '\n' && c < end) {
+			c++;
+		}
+		p = c + 1;
+		if (p >= end) {
+			buf[0] = 0;
+			return 0;
+		} else {
+			int i = 0;
+			while (*p != '\n') {
+				buf[i] = *p;
+				i++;
+				p++;
+			}
+			buf[i] = 0;
+			return i;
+		}
+	}
+}
+
 void readline(char *buf, u_int n) {
 	int r;
-	int left = 0; //challenge
+	int left = 0; //lab6-challenge
 	for (int i = 0; i < n; i++) {
 		if ((r = read(0, buf + i, 1)) != 1) {
 			if (r < 0) {
@@ -218,7 +287,7 @@ void readline(char *buf, u_int n) {
 		}
 		if (buf[i] == '\b' || buf[i] == 0x7f) {
 			if (i > 0) {
-				//challenge
+				//lab6-challenge
 				i--;
 				buf[i + 1] = 0;
 				for (int j = i - left; j <= i - 1; j++) {
@@ -250,53 +319,69 @@ void readline(char *buf, u_int n) {
 			char c1, c2;
 			read(0, &c1, 1);
 			read(0, &c2, 1);
+			//上
 			if(c1 == 91 && c2 == 65) {
-				fprintf(1, "\x1b[B");
-				//for (int j = 0; j < i; j++) {
-				//	fprintf(1, "\x1b[D");
-				//}
-				fprintf(1, "\x1b[%dD", i);
-				char s[] = "testpassed";
-				fprintf(1, "\x1b[K");
-				fprintf(1, s);
-				int len = strlen(s);
-				for (int i = 0; i < len; i++) {
-					buf[i] = s[i];
-				}
-				buf[len] = 0;
-				i = strlen(s) - 1;
-			} else if (c1 == 91 && c2 == 66) {
-				fprintf(1, "\x1b[0D");
-			} else if (c1 == 91 && c2 == 68) {
+				// fprintf(1, "\x1b[B");
+				// fprintf(1, "\x1b[%dD", i);
+				// char s[] = "testpassed";
+				// fprintf(1, "\x1b[K");
+				// fprintf(1, s);
+				// int len = strlen(s);
+				// for (int i = 0; i < len; i++) {
+				// 	buf[i] = s[i];
+				// }
+				// buf[len] = 0;
+				// i = strlen(s) - 1;
+				fprintf(1, "\x1b[B"); //向下
+				fprintf(1, "\x1b[%dD", i - 1); //左移到开头
+				fprintf(1, "\x1b[K"); //删除当前位置到行末
+				i = getcmd(buf, 0); //获取命令（上）
+				fprintf(1, "%s", buf); //打印命令
+			}
+			//下
+			else if (c1 == 91 && c2 == 66) {
+				fprintf(1, "\x1b[%dD", i - 1); //左移到开头
+				fprintf(1, "\x1b[K"); //删除当前位置到行末
+				i = getcmd(buf, 1); //获取命令（下）
+				fprintf(1, "%s", buf); //打印命令
+			}
+			//左
+			else if (c1 == 91 && c2 == 68) {
 				left++;
 				buf[i] = 0;
 				i--;
 				//printf("%d\n", strlen(buf));
 				//printf("%c\n", buf[strlen(buf) - 1]);
-			} else if (c1 == 91 && c2 == 67) {
+			}
+			//右
+			else if (c1 == 91 && c2 == 67) {
 				left--;
 				buf[i] = 0;
 				i--;
 			}
+			resetGetcmd = 0;
 		}
-		else if (left > 0) {
-			//printf("%d %d\n", i, left);
-			/*
-			buf[i - left] = buf[i];
-			buf[i] = 0;
-			i--;
-			left--;
-			*/
-			char c = buf[i];
-			for (int j = i; j >= i - left + 1; j--) {
-				buf[j] = buf[j - 1];
+		else {
+			resetGetcmd = 1;
+			if (left > 0) {
+				//printf("%d %d\n", i, left);
+				/*
+				buf[i - left] = buf[i];
+				buf[i] = 0;
+				i--;
+				left--;
+				*/
+				char c = buf[i];
+				for (int j = i; j >= i - left + 1; j--) {
+					buf[j] = buf[j - 1];
+				}
+				buf[i - left] = c;
+				buf[i + 1] = 0;
+				fprintf(1, "\x1b[%dD", i - left + 1);
+				fprintf(1, "\x1b[K");
+				fprintf(1, buf);
+				fprintf(1, "\x1b[%dD", left);
 			}
-			buf[i - left] = c;
-			buf[i + 1] = 0;
-			fprintf(1, "\x1b[%dD", i - left + 1);
-			fprintf(1, "\x1b[K");
-			fprintf(1, buf);
-			fprintf(1, "\x1b[%dD", left);
 		}
 	}
 	debugf("line too long\n");
@@ -311,6 +396,18 @@ char buf[1024];
 void usage(void) {
 	debugf("usage: sh [-dix] [command-file]\n");
 	exit();
+}
+
+//lab6-challenge
+int savecmd(char *cmd) {
+	int r;
+	if ((r = open(".history", O_CREAT | O_WRONLY | O_APPEND)) < 0) {
+		fprintf(1, ".history open failed");
+		return r;
+	}
+	write(r, cmd, strlen(cmd));
+	write(r, "\n", 1);
+	return 0;
 }
 
 int main(int argc, char **argv) {
@@ -349,6 +446,7 @@ int main(int argc, char **argv) {
 			printf("\n$ ");
 		}
 		readline(buf, sizeof buf);
+		savecmd(buf);
 
 		if (buf[0] == '#') {
 			continue;
