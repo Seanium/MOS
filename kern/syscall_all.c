@@ -5,6 +5,7 @@
 #include <printk.h>
 #include <sched.h>
 #include <syscall.h>
+#include "env_value.c"
 
 extern struct Env *curenv;
 
@@ -489,6 +490,27 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return -E_INVAL;
 }
 
+//lab6-challenge
+int sys_get_shell_id() {
+	return get_shell_id();
+}
+
+int sys_create_shell_id() {
+	return create_shell_id();
+}
+
+int sys_declare_env_value(char *name, char *value, int shell_id, int rdonly, int global) {
+	return declare_env_value(name, value, shell_id, rdonly, global);
+}
+
+int sys_unset_env_value(char *name, int shell_id) {
+	return unset_env_value(name, shell_id);
+}
+
+int sys_get_env_value(char *name, int shell_id, int op, char *value) {
+	return get_env_value(name, shell_id, op, value);
+}
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
@@ -508,6 +530,12 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,
+	//lab6-challenge
+	[SYS_get_shell_id] = sys_get_shell_id,
+	[SYS_create_shell_id] = sys_create_shell_id,
+	[SYS_declare_env_value] = sys_declare_env_value,
+	[SYS_unset_env_value] = sys_unset_env_value,
+	[SYS_get_env_value] = sys_get_env_value,
 };
 
 /* Overview:

@@ -1,6 +1,9 @@
 #include <args.h>
 #include <lib.h>
 
+//lab6-challenge
+int shell_id = 0;
+
 #define WHITESPACE " \t\r\n"
 #define SYMBOLS "<|>&;()"
 
@@ -217,7 +220,7 @@ int getcmd(char *buf, int type) {
 	char *p;
 	if (resetGetcmd == 1) {
 		if ((fdnum = open(".history", O_RDONLY)) < 0) {
-			fprintf(1, ".history open failed");
+			user_panic(".history open failed");
 			return 0;
 		}
 		fd = (struct Fd *) num2fd(fdnum);
@@ -248,6 +251,7 @@ int getcmd(char *buf, int type) {
 			p++;
 		}
 		buf[i] = 0;
+		// fprintf(1, "buf: %s len:%d i:%d\n", buf, strlen(buf), i);
 		return i;
 	} else { //向下
 		//c跳过上条指令末尾换行符
@@ -333,24 +337,30 @@ void readline(char *buf, u_int n) {
 				// buf[len] = 0;
 				// i = strlen(s) - 1;
 				fprintf(1, "\x1b[B"); //向下
-				fprintf(1, "\x1b[%dD", i - 1); //左移到开头
+				if (i > 0) {
+					fprintf(1, "\x1b[%dD", i); //左移到开头
+				}
 				fprintf(1, "\x1b[K"); //删除当前位置到行末
-				i = getcmd(buf, 0); //获取命令（上）
+				i = getcmd(buf, 0) - 1; //获取命令（上）
 				fprintf(1, "%s", buf); //打印命令
+				left = 0; //重置left
 			}
 			//下
 			else if (c1 == 91 && c2 == 66) {
-				fprintf(1, "\x1b[%dD", i - 1); //左移到开头
+				if (i > 0) {
+					fprintf(1, "\x1b[%dD", i); //左移到开头
+				}
 				fprintf(1, "\x1b[K"); //删除当前位置到行末
-				i = getcmd(buf, 1); //获取命令（下）
+				i = getcmd(buf, 1) - 1; //获取命令（下）
 				fprintf(1, "%s", buf); //打印命令
+				left = 0; //重置left
 			}
 			//左
 			else if (c1 == 91 && c2 == 68) {
 				left++;
 				buf[i] = 0;
 				i--;
-				//printf("%d\n", strlen(buf));
+				// printf("%d\n", strlen(buf));
 				//printf("%c\n", buf[strlen(buf) - 1]);
 			}
 			//右
@@ -402,7 +412,7 @@ void usage(void) {
 int savecmd(char *cmd) {
 	int r;
 	if ((r = open(".history", O_CREAT | O_WRONLY | O_APPEND)) < 0) {
-		fprintf(1, ".history open failed");
+		user_panic(".history open failed");
 		return r;
 	}
 	write(r, cmd, strlen(cmd));
@@ -419,6 +429,11 @@ int main(int argc, char **argv) {
 	debugf("::                     MOS Shell 2023                      ::\n");
 	debugf("::                                                         ::\n");
 	debugf(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+	
+	//lab6-challenge
+	shell_id = syscall_create_shell_id();
+	printf("\033[34mcur_shell_id: %d\033[0m\n", shell_id);
+
 	ARGBEGIN {
 	case 'i':
 		interactive = 1;

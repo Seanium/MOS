@@ -69,6 +69,13 @@ int syscall_cgetc();
 int syscall_write_dev(void *, u_int, u_int);
 int syscall_read_dev(void *, u_int, u_int);
 
+//lab6-challenge
+int syscall_get_shell_id();
+int syscall_create_shell_id();
+int syscall_declare_env_value(char *name, char *value, int shell_id, int rdonly, int global);
+int syscall_unset_env_value(char *name, int shell_id);
+int syscall_get_env_value(char *name, int shell_id, int op, char *value);
+
 // ipc.c
 void ipc_send(u_int whom, u_int val, const void *srcva, u_int perm);
 u_int ipc_recv(u_int *whom, void *dstva, u_int *perm);
