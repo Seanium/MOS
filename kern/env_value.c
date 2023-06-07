@@ -106,9 +106,9 @@ int get_env_value(char *name, int shell_id, int op, char *value) {
     } else if (op == 1) {
         int r;
         if ((r = exist_env_value(name, shell_id)) != -1) {
-            printk("\033[33m%s\033[0m\n", env_value[r].value);
+            printk("\033[33m%s\033[0m", env_value[r].value);
         } else {
-            printk("\033[33mcannot find %s\033[0m\n", name);
+            printk("\033[33mcannot find %s\033[0m", name);
             return -1;
         }
     }
