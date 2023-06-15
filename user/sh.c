@@ -83,8 +83,6 @@ int gettoken(char *s, char **p1) {
 
 #define MAXARGS 128
 
-int background = 0;
-
 int parsecmd(char **argv, int *rightpipe) {
 	int argc = 0;
 	while (1) {
@@ -170,12 +168,15 @@ int parsecmd(char **argv, int *rightpipe) {
 				return argc;
 			} else {
 				wait(pid);
-				argc = 0;
-				//*rightpipe = 0;
+				return parsecmd(argv, rightpipe);
 			}
 			break;
 		case '&':
-			background = 1;
+			if (fork() == 0) {
+				return argc;
+			} else {
+				return parsecmd(argv, rightpipe);
+			}
 			break;
 		}
 	}
@@ -197,9 +198,7 @@ void runcmd(char *s) {
 	int child = spawn(argv[0], argv);
 	close_all();
 	if (child >= 0) {
-		if (!background) {
-			wait(child);
-		}
+		wait(child);
 	} else {
 		debugf("spawn %s: %d\n", argv[0], child);
 	}
